@@ -1,0 +1,9 @@
+{
+    "bot_token": "-",
+    "bot_prefix": ">",
+    "orders_channel": 943127794022506588,
+    "hunter_role": 942541619570294865,
+    "cogs": [
+        "cogs.commands"
+    ]
+}
