@@ -6,7 +6,6 @@ with open('db/config.json') as fp:
     config = json.load(fp)
 
 bot = commands.Bot(command_prefix=config["bot_prefix"])
-bot.remove_command("help")
 
 @bot.event
 async def on_ready():
@@ -15,4 +14,4 @@ async def on_ready():
     print('Ready!')
 
     
-bot.run(config["bot_token"])
+bot.run(config["token"])
