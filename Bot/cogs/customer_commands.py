@@ -53,7 +53,7 @@ class Customer(commands.Cog):
         channel_id = config["orders_channel"]
         channel = await self.bot.fetch_channel(channel_id)
 
-        message = await channel.send(f"<@&{config['hunter_role']}>", embed=embed)
+        message = await channel.send(f"a new order has been placed", embed=embed)
 
         cur.execute(f"""INSERT INTO orders 
                         (order_id, customer, product, amount, storage, cost, messageid, progress, status)
