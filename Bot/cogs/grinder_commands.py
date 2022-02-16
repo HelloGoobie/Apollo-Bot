@@ -102,7 +102,7 @@ class Grinder(commands.Cog):
                 name = f"{grinder.mention} ({grinder.display_name}#{grinder.discriminator})"
             except:
                 name = "Please contact staff"
-            await collection_channel.send(f"<@{order['customer']}>", embed=functions.embed_generator(self.bot, "**Order #{} - Ready For Collection**\n**Product: **{}\n**Amount: **{}**Cost: **{}\n**Grinder: **{}".format(
+            await collection_channel.send(f"<@{order['customer']}>", embed=functions.embed_generator(self.bot, "**Order #{} - Ready For Collection**\n**Product: **{}\n**Amount: **{}\n**Cost: **{}\n**Grinder: **{}".format(
                 order_id, 
                 order["product"],
                 order["amount"],
