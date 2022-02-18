@@ -4,6 +4,11 @@ from discord.ext import commands
 import sqlite3
 import modules.functions as functions
 
+def hunter_role():
+    with open("db/config.json") as fp:
+        config = json.load(fp)
+    return config["hunter_role"]
+
 class Customer(commands.Cog):
     """Customer Commands"""
     def __init__(self, bot):
@@ -64,7 +69,28 @@ class Customer(commands.Cog):
 
         await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
 
+    @commands.command(name="orders")
+    async def _orders(self, ctx,):
+        con = sqlite3.connect('db/orders.db')
+        cur = con.cursor()
+        oginfo = f"""SELECT order_id, product, amount , cost , progress , grinder, status FROM orders WHERE customer LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
+        info = cur.execute(oginfo)
+        userorders = info.fetchall()
+        
+        if userorders == []:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "Hey, you dont currently have any orders open with us! head to #Order-Here and place a new one!", colour=0xFF0000))
+            return 
+    
+        embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
+        for i, x in enumerate(userorders, 1):
+            grinderperson = f"<@{str(x[5])}>"
+            if grinderperson != None:
+                grinderperson = "Not Claimed"
 
+            formatedPrice = "${:,}".format(x[3])
+            embed.add_field(name=f"Order #{str(x[0])}", value=f"**Product**: {str(x[1]).title()}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
+        await ctx.reply(embed=embed)
+            
     @commands.command(name="track")
     async def _track(self, ctx, order_id: int):
         """- Track an order"""
