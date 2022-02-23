@@ -31,7 +31,7 @@ class Customer(commands.Cog):
         limit = items[item.lower()]["limit"]
 
         if amount > limit: 
-            await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
             return
 
         con = sqlite3.connect("db/orders.db", timeout=10)
