@@ -105,6 +105,7 @@ class Customer(commands.Cog):
             return
 
         embed = functions.embed_generator(self.bot, "Here are your current orders:", colour=0xFFFF00, author=ctx.author.name, avatar_url=ctx.author.avatar_url)
+        hasPriority = 0
         for i, x in enumerate(userorders, 1):
             grinderperson = f"<@{str(x[5])}>"
             priority = ""
@@ -113,10 +114,15 @@ class Customer(commands.Cog):
                 grinderperson = "Not Claimed"
 
             if x[7]:
+                hasPriority = 1
                 priority = "**Priority**: High\n"
 
             formatedPrice = "${:,}".format(x[3])
             embed.add_field(name=str(x[1]).title(), value=f"**Order ID**: {str(x[0])}\n{priority}**Product**: {str(x[1])}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
+
+        if hasPriority:
+            embed.colour = 0x8240AF
+
         await ctx.reply(embed=embed)
 
     @commands.command(name="track")
@@ -150,9 +156,7 @@ class Customer(commands.Cog):
 
         customer = await self.bot.fetch_user(order["customer"])
         progress = f'{order["progress"]}/{order["amount"]}' + " ({}%)".format(round((order["progress"] / order["amount"]) * 100))
-
-        await ctx.reply(
-            embed=functions.embed_generator(
+        embed = functions.embed_generator(
                 self.bot,
                 "**Order ID: **{}\n**Customer: **{}\n{}**Product: **{}\n**Cost: **{}\n**Status: **{}\n**Grinder: **{}\n**Progress: **{}".format(
                     order_id,
@@ -165,7 +169,11 @@ class Customer(commands.Cog):
                     progress,
                 ), colour=0x00FF00, author=customer.display_name, avatar_url=customer.avatar_url
             )
-        )
+
+        if order["priority"]:
+            embed.color = 0x8240AF
+
+        await ctx.reply(embed=embed)
 
 
 
