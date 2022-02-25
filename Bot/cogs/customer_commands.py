@@ -134,6 +134,8 @@ class Customer(commands.Cog):
             return
 
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
+        name = ""
+        priority = ""
 
         if not order["grinder"]:
             name = "Unassigned"
@@ -145,7 +147,7 @@ class Customer(commands.Cog):
                 name = "Unknown"
 
         if order["priority"]:
-            priority = 1
+            priority = "**Priority**: High\n"
 
         customer = await self.bot.fetch_user(order["customer"])
         progress = f'{order["progress"]}/{order["amount"]}' + " ({}%)".format(round((order["progress"] / order["amount"]) * 100))
@@ -153,9 +155,10 @@ class Customer(commands.Cog):
         await ctx.reply(
             embed=functions.embed_generator(
                 self.bot,
-                "**Order ID: **{}\n**Customer: **{}\n**Product: **{}\n**Cost: **{}\n**Status: **{}\n**Grinder: **{}\n**Progress: **{}".format(
+                "**Order ID: **{}\n**Customer: **{}\n{}**Product: **{}\n**Cost: **{}\n**Status: **{}\n**Grinder: **{}\n**Progress: **{}".format(
                     order_id,
                     customer.display_name,
+                    priority,
                     order["product"],
                     "$" + format(order["cost"], ","),
                     order["status"].capitalize(),
