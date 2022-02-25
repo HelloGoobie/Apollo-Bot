@@ -96,7 +96,7 @@ class Customer(commands.Cog):
     async def _orders(self, ctx,):
         con = sqlite3.connect('db/orders.db')
         cur = con.cursor()
-        oginfo = f"""SELECT order_id, product, amount , cost , progress , grinder, status FROM orders WHERE customer LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
+        oginfo = f"""SELECT order_id, product, amount, cost, progress, grinder, status, priority FROM orders WHERE customer LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
         info = cur.execute(oginfo)
         userorders = info.fetchall()
 
@@ -107,11 +107,16 @@ class Customer(commands.Cog):
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         for i, x in enumerate(userorders, 1):
             grinderperson = f"<@{str(x[5])}>"
-            if grinderperson is None:
+            priority = ""
+
+            if x[5] is None:
                 grinderperson = "Not Claimed"
 
+            if x[7]:
+                priority = "**Priority**: High\n"
+
             formatedPrice = "${:,}".format(x[3])
-            embed.add_field(name=f"Order #{str(x[0])}", value=f"**Product**: {str(x[1]).title()}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
+            embed.add_field(name=str(x[1]).title(), value=f"**Order ID**: {str(x[0])}\n{priority}**Product**: {str(x[1])}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
         await ctx.reply(embed=embed)
 
     @commands.command(name="track")
@@ -123,10 +128,13 @@ class Customer(commands.Cog):
         cur.execute("SELECT * FROM orders WHERE order_id LIKE ?", (order_id,))
         order = cur.fetchone()
         con.close()
+
         if not order:
             await ctx.reply(embed=functions.embed_generator(self.bot, "Order not found", colour=0xFF0000))
             return
+
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
+
         if not order["grinder"]:
             name = "Unassigned"
         else:
@@ -135,7 +143,13 @@ class Customer(commands.Cog):
                 name = grinder.display_name
             except commands.UserNotFound:
                 name = "Unknown"
+
+        if order["priority"]:
+            priority = 1
+
         customer = await self.bot.fetch_user(order["customer"])
+        progress = f'{order["progress"]}/{order["amount"]}' + " ({}%)".format(round((order["progress"] / order["amount"]) * 100))
+
         await ctx.reply(
             embed=functions.embed_generator(
                 self.bot,
@@ -146,10 +160,7 @@ class Customer(commands.Cog):
                     "$" + format(order["cost"], ","),
                     order["status"].capitalize(),
                     name,
-                    f'{order["progress"]}/{order["amount"]}'
-                    + " ({}%)".format(
-                        round((order["progress"] / order["amount"]) * 100)
-                    ),
+                    progress,
                 ), colour=0x00FF00, author=customer.display_name, avatar_url=customer.avatar_url
             )
         )
