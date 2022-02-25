@@ -20,7 +20,7 @@ class Customer(commands.Cog):
         with open('db/items.json') as fp:
             items = json.load(fp)
         if amount < 1:
-            await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
             return
 
         if not items.get(item.lower()):
