@@ -31,7 +31,7 @@ class Customer(commands.Cog):
         limit = items[item.lower()]["limit"]
 
         if amount > limit: 
-            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
             return
 
         con = sqlite3.connect("db/orders.db", timeout=10)
@@ -84,7 +84,7 @@ class Customer(commands.Cog):
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         for i, x in enumerate(userorders, 1):
             grinderperson = f"<@{str(x[5])}>"
-            if grinderperson != None:
+            if grinderperson is None:
                 grinderperson = "Not Claimed"
 
             formatedPrice = "${:,}".format(x[3])
@@ -103,6 +103,7 @@ class Customer(commands.Cog):
         if not order:
             await ctx.reply(embed=functions.embed_generator(self.bot, "Order not found", colour=0xFF0000))
             return
+        embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         if not order["grinder"]:
             name = "Unassigned"
         else:
@@ -126,7 +127,8 @@ class Customer(commands.Cog):
                     ),
                 ), colour=0x00FF00
             )
-        )        
+        )  
+                
         
 
     #Errors
