@@ -104,7 +104,7 @@ class Customer(commands.Cog):
             await ctx.reply(embed=functions.embed_generator(self.bot, "Hey, you dont currently have any orders open with us! head to #Order-Here and place a new one!", colour=0xFF0000))
             return
 
-        embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
+        embed = functions.embed_generator(self.bot, "Here are your current orders:", colour=0xFFFF00, author=ctx.author.name, avatar_url=ctx.author.avatar_url)
         for i, x in enumerate(userorders, 1):
             grinderperson = f"<@{str(x[5])}>"
             priority = ""
@@ -133,7 +133,6 @@ class Customer(commands.Cog):
             await ctx.reply(embed=functions.embed_generator(self.bot, "Order not found", colour=0xFF0000))
             return
 
-        embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         name = ""
         priority = ""
 
