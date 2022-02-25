@@ -9,29 +9,40 @@ def hunter_role():
         config = json.load(fp)
     return config["hunter_role"]
 
+prioties = ["normal", "high"]
+
 class Customer(commands.Cog):
     """Customer Commands"""
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name="order")
-    async def _order(self, ctx, item, amount: int, storage = None):
+    async def _order(self, ctx, item, amount: int, priority:str, storage = None):
         """- Place a new order"""
+
         with open('db/items.json') as fp:
             items = json.load(fp)
-        if amount < 1:
-            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
-            return
 
         if not items.get(item.lower()):
             await ctx.reply(embed=functions.embed_generator(self.bot, f"**{item}** is not a valid item.", 0xFF0000))
             return
 
-        cost = items[item.lower()]["cost"]
-        limit = items[item.lower()]["limit"]
+        if amount < 1:
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
+            return
+
+        if priority.lower() not in prioties:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "The priority must be either High or Normal", 0xFF0000))
+            return
+
+        item = item.lower()
+        priority = prioties.index(priority.lower())
+
+        cost = items[item]["cost"]
+        limit = items[item]["limit"]
 
         if amount > limit:
-            await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
             return
 
         con = sqlite3.connect("db/orders.db", timeout=10)
@@ -49,20 +60,32 @@ class Customer(commands.Cog):
             await ctx.reply(embed=functions.embed_generator(self.bot, "This order, in addition to your previous orders, would exceed the limit of {} for {} orders".format(limit, item), 0xFF0000))
             con.close()
             return
+
         final_cost = cost * amount
+
+        if priority:
+            final_cost *= 1.05
+
         formatted_cost = "$" + format(final_cost, ",")
         name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
-        embed = discord.Embed(title="Order Placed - #{}".format(order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, storage), colour= 0xFF0000)
+        embed = discord.Embed(title="Order Placed - #{}".format(order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, storage))
+
         with open("db/config.json") as fp:
             config = json.load(fp)
+
         channel_id = config["orders_channel"]
         channel = await self.bot.fetch_channel(channel_id)
 
-        message = await channel.send(f"a new order has been placed", embed=embed)
+        if priority:
+            embed.color = 0x8240AF
+            message = await channel.send("A priority order has been placed", embed=embed)
+        else:
+            embed.color = 0xFF0000
+            message = await channel.send("A new order has been placed", embed=embed)
 
         cur.execute(f"""INSERT INTO orders
-                        (order_id, customer, product, amount, storage, cost, messageid, progress, status)
-                    VALUES ({order_id}, {ctx.author.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending')""", (item.lower(), amount, storage))
+                        (order_id, customer, product, amount, storage, cost, messageid, progress, status, priority)
+                    VALUES ({order_id}, {ctx.author.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending', ?)""", (item.lower(), amount, storage, priority))
 
         con.commit()
         con.close()
