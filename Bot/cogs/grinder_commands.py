@@ -128,7 +128,7 @@ class Grinder(commands.Cog):
     async def _current(self, ctx,):
         con = sqlite3.connect('db/orders.db')
         cur = con.cursor()
-        oginfo = f"""SELECT order_id, product, amount , cost , progress , grinder, status FROM orders WHERE grinder LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
+        oginfo = f"""SELECT order_id, customer, product, amount , cost , progress , grinder, status FROM orders WHERE grinder LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
         info = cur.execute(oginfo)
         userorders = info.fetchall()
         
@@ -138,12 +138,12 @@ class Grinder(commands.Cog):
     
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         for i, x in enumerate(userorders, 1):
-            grinderperson = f"<@{str(x[5])}>"
-            if grinderperson != None:
+            grinderperson = f"<@{str(x[6])}>"
+            if grinderperson is None:
                 grinderperson = "Not Claimed"
 
-            formatedPrice = "${:,}".format(x[3])
-            embed.add_field(name=f"Order #{str(x[0])}", value=f"**Product**: {str(x[1]).title()}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
+            formatedPrice = "${:,}".format(x[4])
+            embed.add_field(name=f"Order #{str(x[0])}", value=f"**Customer**: <@{str(x[1])}>\n**Product**: {str(x[2]).title()}\n**Amount**: {str(x[3])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[7]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[5])}/{str(x[3])}", inline=True)
         await ctx.reply(embed=embed)
         
     
