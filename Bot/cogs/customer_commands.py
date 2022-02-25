@@ -19,18 +19,18 @@ class Customer(commands.Cog):
         """- Place a new order"""
         with open('db/items.json') as fp:
             items = json.load(fp)
-        if amount < 1: 
+        if amount < 1:
             await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
             return
 
-        if not items.get(item.lower()): 
+        if not items.get(item.lower()):
             await ctx.reply(embed=functions.embed_generator(self.bot, f"**{item}** is not a valid item.", 0xFF0000))
             return
 
         cost = items[item.lower()]["cost"]
         limit = items[item.lower()]["limit"]
 
-        if amount > limit: 
+        if amount > limit:
             await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be greater than 0", 0xFF0000))
             return
 
@@ -60,7 +60,7 @@ class Customer(commands.Cog):
 
         message = await channel.send(f"a new order has been placed", embed=embed)
 
-        cur.execute(f"""INSERT INTO orders 
+        cur.execute(f"""INSERT INTO orders
                         (order_id, customer, product, amount, storage, cost, messageid, progress, status)
                     VALUES ({order_id}, {ctx.author.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending')""", (item.lower(), amount, storage))
 
@@ -76,11 +76,11 @@ class Customer(commands.Cog):
         oginfo = f"""SELECT order_id, product, amount , cost , progress , grinder, status FROM orders WHERE customer LIKE {ctx.author.id} and status not LIKE 'cancelled' and status not LIKE 'delivered' """
         info = cur.execute(oginfo)
         userorders = info.fetchall()
-        
+
         if userorders == []:
             await ctx.reply(embed=functions.embed_generator(self.bot, "Hey, you dont currently have any orders open with us! head to #Order-Here and place a new one!", colour=0xFF0000))
-            return 
-    
+            return
+
         embed = discord.Embed(title=f"{ctx.author}'s Orders! ", colour = 0x00FF00)
         for i, x in enumerate(userorders, 1):
             grinderperson = f"<@{str(x[5])}>"
@@ -90,7 +90,7 @@ class Customer(commands.Cog):
             formatedPrice = "${:,}".format(x[3])
             embed.add_field(name=f"Order #{str(x[0])}", value=f"**Product**: {str(x[1]).title()}\n**Amount**: {str(x[2])}\n**Cost**: {formatedPrice}\n**Status**: {str(x[6]).title()}\n**Hunter**: {grinderperson}\n**Progress**: {str(x[4])}/{str(x[2])}", inline=True)
         await ctx.reply(embed=embed)
-            
+
     @commands.command(name="track")
     async def _track(self, ctx, order_id: int):
         """- Track an order"""
@@ -112,11 +112,13 @@ class Customer(commands.Cog):
                 name = grinder.display_name
             except commands.UserNotFound:
                 name = "Unknown"
+        customer = await self.bot.fetch_user(order["customer"])
         await ctx.reply(
             embed=functions.embed_generator(
                 self.bot,
-                "**Order ID: **{}\n**Product: **{}\n**Cost: **{}\n**Status: **{}\n**Grinder: **{}\n**Progress: **{}".format(
+                "**Order ID: **{}\n**Customer: **{}\n**Product: **{}\n**Cost: **{}\n**Status: **{}\n**Grinder: **{}\n**Progress: **{}".format(
                     order_id,
+                    customer.display_name,
                     order["product"],
                     "$" + format(order["cost"], ","),
                     order["status"].capitalize(),
@@ -125,14 +127,14 @@ class Customer(commands.Cog):
                     + " ({}%)".format(
                         round((order["progress"] / order["amount"]) * 100)
                     ),
-                ), colour=0x00FF00
+                ), colour=0x00FF00, author=customer.display_name, avatar_url=customer.avatar_url
             )
-        )  
-                
-        
+        )
+
+
 
     #Errors
-    @_order.error        
+    @_order.error
     async def order_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.reply(embed=functions.embed_generator(self.bot, "The amount must be a whole number", 0xFF0000))
@@ -143,8 +145,8 @@ class Customer(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.reply(embed=functions.embed_generator(self.bot, "The order ID must be a whole number", 0xFF0000))
             return
-        
 
-        
+
+
 def setup(bot):
     bot.add_cog(Customer(bot))
