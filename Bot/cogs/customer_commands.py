@@ -64,7 +64,7 @@ class Customer(commands.Cog):
         final_cost = cost * amount
 
         if priority:
-            final_cost = round(final_cost * 1.05)
+            final_cost = round(final_cost * 1.1)
 
         formatted_cost = "$" + format(final_cost, ",")
         name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
@@ -194,3 +194,4 @@ class Customer(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Customer(bot))
+ 
