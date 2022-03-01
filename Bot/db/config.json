@@ -1,14 +1,14 @@
-{   
-    "token": "-",
-    "bot_prefix": ">",
-    "orders_channel": 943127794022506588,
-    "collection_channel": 942481283320270939,
-    "hunter_role": 942541619570294865,
-    "cogs": [
-        "cogs.errors",
-        "cogs.customer_commands",
-        "cogs.grinder_commands",
-        "cogs.admin_commands"
-    ]
+{
+	"token": "-",
+	"bot_prefix": ">",
+	"orders_channel": 943127794022506588,
+	"collection_channel": 942481283320270939,
+	"hunter_role": 942541619570294865,
 	"manager_role": 942427310206894160,
+	"cogs": [
+		"cogs.errors",
+		"cogs.customer_commands",
+		"cogs.grinder_commands",
+		"cogs.admin_commands"
+	]
 }
