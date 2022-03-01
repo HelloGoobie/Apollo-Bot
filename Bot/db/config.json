@@ -10,4 +10,5 @@
         "cogs.grinder_commands",
         "cogs.admin_commands"
     ]
+	"manager_role": 942427310206894160,
 }
