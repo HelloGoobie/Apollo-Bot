@@ -10,17 +10,5 @@
         "cogs.grinder_commands",
         "cogs.admin_commands"
     ]
-{
-	"token": "OTM0NTg0ODQ5MTU3NzUwODU1.YeyN9w.o69qmG5A_VaCcSXe9EzND6yw-xw",
-	"bot_prefix": ">",
-	"orders_channel": 934925443239399435,
-	"collection_channel": 934925443239399435,
 	"manager_role": 942427310206894160,
-	"hunter_role": 934834886970327091,
-	"cogs": [
-		"cogs.errors",
-		"cogs.customer_commands",
-		"cogs.grinder_commands",
-		"cogs.admin_commands"
-	]
 }
