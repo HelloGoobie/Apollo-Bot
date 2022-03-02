@@ -21,14 +21,17 @@ def discount_active():
 
     cur.execute("SELECT discount_id, discount_amount, discount_end_date FROM discount WHERE active = 1")
     discount = cur.fetchone()
-    if not discount:
-        return False
+
+    if discount is None:
+        con.close()
+        return [False, 0]
 
     if discount["discount_end_date"] < int(time.time()):
         cur.execute("UPDATE discounts SET active = 0 WHERE active = 1")
         con.commit()
         con.close()
-        return False
+        return [False, 0]
+
     con.close()
     return [discount["discount_id"], discount["discount_amount"]]
 
@@ -42,7 +45,8 @@ def discount_price(price):
     con.close()
     if not discount:
         return price
-    return price * (1 - (discount["discount_amount"] / 100))
+
+    return int(round(price * (1 - (discount["discount_amount"] / 100))))
 
 def discount_get_amount(id):
     con = sqlite3.connect('db/orders.db')
