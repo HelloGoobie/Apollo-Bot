@@ -67,11 +67,13 @@ class Customer(commands.Cog):
             final_cost = round(final_cost * 1.1)
 
         [discount_id, discount_amount] = functions.discount_active()
+
         discount_text = ""
         if discount_id:
             final_cost = functions.discount_price(final_cost)
             discount_text = "\n**Discount**: {}%".format(discount_amount)
 
+        final_cost = int(round(final_cost))
 
         formatted_cost = "$" + format(final_cost, ",")
         name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
@@ -97,7 +99,10 @@ class Customer(commands.Cog):
         con.commit()
         con.close()
 
-        await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
+        if discount_id:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
+        else:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
 
     @commands.command(name="orders")
     async def _orders(self, ctx,):
@@ -143,6 +148,7 @@ class Customer(commands.Cog):
         con = sqlite3.connect('db/orders.db')
         con.row_factory = functions.dict_factory
         cur = con.cursor()
+
         cur.execute("SELECT * FROM orders WHERE order_id LIKE ?", (order_id,))
         order = cur.fetchone()
         con.close()
