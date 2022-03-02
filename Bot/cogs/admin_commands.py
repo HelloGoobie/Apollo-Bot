@@ -17,7 +17,7 @@ class Admin(commands.Cog):
         self.bot = bot
 
     @commands.command(name="cancel")
-    @commands.has_permissions(administrator=True)
+    @commands.has_any_role(manager_role())
     async def _cancel(self, ctx, order_id: int):
         """- Cancel an order"""
         con = sqlite3.connect('db/orders.db')
@@ -53,9 +53,9 @@ class Admin(commands.Cog):
 
         await ctx.reply(embed=functions.embed_generator(self.bot, "You have successfully cancelled order #{}".format(order_id)))
 
-    @commands.command(name="discount")
+    @commands.command(name="newdiscount")
     @commands.has_any_role(manager_role())
-    async def _discount(self, ctx, discount: int, length: int):
+    async def _newdiscount(self, ctx, discount: int, length: int):
         con = sqlite3.connect('db/orders.db')
         con.row_factory = functions.dict_factory
         cur = con.cursor()
@@ -72,10 +72,61 @@ class Admin(commands.Cog):
                 con.close()
                 return
 
-        cur.execute("INSERT INTO discount (active, discount_amount, discount_start_date, discount_end_date) VALUES (?, ?, ?, ?)", (1, discount, int(time.time()), int(time.time()) + length * 86400))
+        cur.execute("INSERT INTO discount (active, discount_amount, discount_start_date, discount_end_date, manager) VALUES (?, ?, ?, ?, ?)", (1, discount, int(time.time()), int(time.time()) + length * 86400, ctx.author.id))
         con.commit()
+        con.close()
 
-        await ctx.reply(embed=functions.embed_generator(self.bot, "A discount of {}% for {} days has now been applied".format(discount, length)))
+        manager = ctx.author.nick if ctx.author.nick else ctx.author.name
+
+        await ctx.send(embed=functions.embed_generator(self.bot, "The discount **{}** has started for {}% off, for the next {} days has now been applied\n**Ends:** <t:{}:R>".format(manager, discount, length, int(time.time()) + length * 86400), author=manager, avatar_url=ctx.author.avatar_url))
+
+    @commands.command(name="discount")
+    @commands.has_any_role(manager_role())
+    async def _discount(self, ctx):
+        con = sqlite3.connect('db/orders.db')
+        con.row_factory = functions.dict_factory
+        cur = con.cursor()
+
+        cur.execute("SELECT discount_amount, discount_end_date, manager FROM discount WHERE active = 1")
+        discount = cur.fetchone()
+        if not discount:
+            await ctx.send(embed=functions.embed_generator(self.bot, "There is no active discount", colour=0xFF0000))
+            con.close()
+            return
+
+        con.close()
+
+        manager = await self.bot.fetch_user(discount["manager"])
+
+        if not manager:
+            await ctx.send(embed=functions.embed_generator(self.bot, "The manager of this discount has left the server", colour=0xFF0000))
+
+        await ctx.send(embed=functions.embed_generator(self.bot, "The current discount is **{}%** started by **{}**\n**Ends:** <t:{}:R>".format(discount["discount_amount"], manager.name, discount["discount_end_date"]), author=manager.name, avatar_url=manager.avatar_url))
+
+    @commands.command(name="enddiscount")
+    @commands.has_any_role(manager_role())
+    async def _enddiscount(self, ctx):
+        con = sqlite3.connect('db/orders.db')
+        con.row_factory = functions.dict_factory
+        cur = con.cursor()
+
+        cur.execute("SELECT manager, discount_amount FROM discount WHERE active = 1")
+        current_discount = cur.fetchone()
+        if not current_discount:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "There is no active discount", colour=0xFF0000))
+            con.close()
+            return
+
+        cur.execute("UPDATE discount SET active = 0 WHERE active = 1")
+        con.commit()
+        con.close()
+
+        manager = await self.bot.fetch_user(current_discount["manager"])
+
+        if not manager:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "The manager of this discount has left the server", colour=0xFF0000))
+
+        await ctx.reply(embed=functions.embed_generator(self.bot, "The discount of **{}%** by **{}** has now been ended".format(current_discount["discount_amount"], manager.name), 0xFF0000, author=manager.name, avatar_url=manager.avatar_url))
 
 
 
