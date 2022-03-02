@@ -153,7 +153,7 @@ class Customer(commands.Cog):
 
         name = ""
         priority = ""
-        discount_amount = ""
+        discount_text = ""
 
         if not order["grinder"]:
             name = "Unassigned"
