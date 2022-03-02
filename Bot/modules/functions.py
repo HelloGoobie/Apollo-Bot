@@ -86,6 +86,6 @@ async def discount_notify_staff(bot, message):
 
     before = int(round(items[order["product"]]["cost"] * order["amount"] * priority) / 1000000)
 
-    embed = embed_generator(bot, "New discount request\n\n**ID:** {}\n**Customer:** {}\n**Product:** {}\n**Before:** ${}".format(order['order_id'], order['customer'], order['product'], before))
+    embed = embed_generator(bot, "New discount order\n\n**ID:** {}\n**Customer:** {}\n**Product:** {}\n**Before:** ${}".format(order['order_id'], order['customer'], order['product'], before))
 
     await channel.send(embed=embed)
