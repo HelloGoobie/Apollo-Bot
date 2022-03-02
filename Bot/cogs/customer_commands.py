@@ -101,6 +101,7 @@ class Customer(commands.Cog):
 
         if discount_id:
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
+            await functions.discount_notify_staff(self.bot, message.id)
         else:
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
 

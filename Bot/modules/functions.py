@@ -1,6 +1,7 @@
 import discord
 import sqlite3
 import time
+import json
 
 def dict_factory(cursor, row):
     return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
@@ -59,3 +60,32 @@ def discount_get_amount(id):
     if not discount:
         return False
     return discount["discount_amount"]
+
+async def discount_notify_staff(bot, message):
+    con = sqlite3.connect('db/orders.db')
+    con.row_factory = dict_factory
+    cur = con.cursor()
+
+    cur.execute("SELECT order_id, customer, product, amount, priority, discount_id FROM orders WHERE messageid = ?", (message,))
+    order = cur.fetchone()
+    con.close()
+
+    if not order:
+        return
+
+    with open("db/config.json") as fp:
+        config = json.load(fp)
+
+    with open("db/items.json") as fp:
+        items = json.load(fp)
+
+    channel_id = config["discount_channel"]
+    channel = await bot.fetch_channel(channel_id)
+
+    priority = 1.1 if order["priority"] else 1.0
+
+    before = int(round(items[order["product"]]["cost"] * order["amount"] * priority) / 1000000)
+
+    embed = embed_generator(bot, "New discount request\n\n**ID:** {}\n**Customer:** {}\n**Product:** {}\n**Before:** ${}".format(order['order_id'], order['customer'], order['product'], before))
+
+    await channel.send(embed=embed)
