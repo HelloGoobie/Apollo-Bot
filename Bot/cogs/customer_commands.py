@@ -20,6 +20,15 @@ class Customer(commands.Cog):
     async def _order(self, ctx, item, amount: int, priority:str, storage = None):
         """- Place a new order"""
 
+        blacklist = await functions.blacklist_check(self.bot, id=ctx.author.id)
+
+        if blacklist[0]:
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"You are blacklisted from using this bot untill <t:{blacklist[1]}:f>", colour=0xFF0000))
+            return
+
+        with open("db/config.json") as fp:
+            config = json.load(fp)
+
         with open('db/items.json') as fp:
             items = json.load(fp)
 
@@ -67,18 +76,17 @@ class Customer(commands.Cog):
             final_cost = round(final_cost * 1.1)
 
         [discount_id, discount_amount] = functions.discount_active()
+
         discount_text = ""
         if discount_id:
             final_cost = functions.discount_price(final_cost)
             discount_text = "\n**Discount**: {}%".format(discount_amount)
 
+        final_cost = int(round(final_cost))
 
         formatted_cost = "$" + format(final_cost, ",")
         name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
         embed = discord.Embed(title="Order Placed - #{}".format(order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, discount_text, storage))
-
-        with open("db/config.json") as fp:
-            config = json.load(fp)
 
         channel_id = config["orders_channel"]
         channel = await self.bot.fetch_channel(channel_id)
@@ -97,7 +105,10 @@ class Customer(commands.Cog):
         con.commit()
         con.close()
 
-        await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
+        if discount_id:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
+        else:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
 
     @commands.command(name="orders")
     async def _orders(self, ctx,):
@@ -143,6 +154,7 @@ class Customer(commands.Cog):
         con = sqlite3.connect('db/orders.db')
         con.row_factory = functions.dict_factory
         cur = con.cursor()
+
         cur.execute("SELECT * FROM orders WHERE order_id LIKE ?", (order_id,))
         order = cur.fetchone()
         con.close()
@@ -193,7 +205,11 @@ class Customer(commands.Cog):
 
         await ctx.reply(embed=embed)
 
+    @commands.command(name="slap")
+    @commands.cooldown(1, 2, commands.BucketType.user)
+    async def _slap(self, ctx, user: discord.Member):
 
+        await ctx.send(f"{ctx.author.mention} delivers an almighty backhand to the face of {user.mention}! <:plp:943133077725667388>")
 
     #Errors
     @_order.error

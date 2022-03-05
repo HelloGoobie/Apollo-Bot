@@ -5,6 +5,9 @@
 	"collection_channel": 942481283320270939,
 	"hunter_role": 942541619570294865,
 	"manager_role": 942427310206894160,
+	"blacklist_role": 949384081186123837,
+	"blacklist_channel": 934925443239399435,
+	"moderation_logs_channel": 934925443239399435,
 	"cogs": [
 		"cogs.errors",
 		"cogs.customer_commands",
