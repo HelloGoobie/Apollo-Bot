@@ -61,31 +61,36 @@ def discount_get_amount(id):
         return False
     return discount["discount_amount"]
 
-async def discount_notify_staff(bot, message):
+async def blacklist_check(bot, id):
     con = sqlite3.connect('db/orders.db')
     con.row_factory = dict_factory
     cur = con.cursor()
 
-    cur.execute("SELECT order_id, customer, product, amount, priority, discount_id FROM orders WHERE messageid = ?", (message,))
-    order = cur.fetchone()
+    cur.execute("SELECT blacklist_end_date, msg FROM blacklist WHERE user_id = ? AND active = 1", (id,))
+    blacklist = cur.fetchone()
     con.close()
+    if not blacklist:
+        return [False, 0]
 
-    if not order:
-        return
+    if blacklist["blacklist_end_date"] < int(time.time()):
+        with open('db/config.json') as fp:
+            config = json.load(fp)
 
-    with open("db/config.json") as fp:
-        config = json.load(fp)
+        bot.guilds[0].get_member(id).remove_roles(bot.guilds[0].get_role(config["blacklist_role"]))
 
-    with open("db/items.json") as fp:
-        items = json.load(fp)
+        con = sqlite3.connect('db/orders.db')
+        con.row_factory = dict_factory
+        cur = con.cursor()
 
-    channel_id = config["discount_channel"]
-    channel = await bot.fetch_channel(channel_id)
+        cur.execute("UPDATE blacklist SET active = 0 WHERE user_id = ? AND active = 1", (id,))
+        con.commit()
+        con.close()
 
-    priority = 1.1 if order["priority"] else 1.0
+        await bot.guilds[0].get_member(id).remove_roles(bot.guilds[0].get_role(config["blacklist_role"]))
 
-    before = int(round(items[order["product"]]["cost"] * order["amount"] * priority) / 1000000)
+        await bot.guilds[0].get_channel(config["blacklist_channel"]).delete_message(blacklist["msg"])
 
-    embed = embed_generator(bot, "New discount order\n\n**ID:** {}\n**Customer:** {}\n**Product:** {}\n**Before:** ${}".format(order['order_id'], order['customer'], order['product'], before))
+        return [False, 0]
 
-    await channel.send(embed=embed)
+
+    return [True, blacklist["blacklist_end_date"]]

@@ -20,6 +20,15 @@ class Customer(commands.Cog):
     async def _order(self, ctx, item, amount: int, priority:str, storage = None):
         """- Place a new order"""
 
+        blacklist = await functions.blacklist_check(self.bot, id=ctx.author.id)
+
+        if blacklist[0]:
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"You are blacklisted from using this bot untill <t:{blacklist[1]}:f>", colour=0xFF0000))
+            return
+
+        with open("db/config.json") as fp:
+            config = json.load(fp)
+
         with open('db/items.json') as fp:
             items = json.load(fp)
 
@@ -79,9 +88,6 @@ class Customer(commands.Cog):
         name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
         embed = discord.Embed(title="Order Placed - #{}".format(order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, discount_text, storage))
 
-        with open("db/config.json") as fp:
-            config = json.load(fp)
-
         channel_id = config["orders_channel"]
         channel = await self.bot.fetch_channel(channel_id)
 
@@ -101,7 +107,6 @@ class Customer(commands.Cog):
 
         if discount_id:
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
-            await functions.discount_notify_staff(self.bot, message.id)
         else:
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing your order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
 
@@ -200,7 +205,11 @@ class Customer(commands.Cog):
 
         await ctx.reply(embed=embed)
 
+    @commands.command(name="slap")
+    @commands.cooldown(1, 2, commands.BucketType.user)
+    async def _slap(self, ctx, user: discord.Member):
 
+        await ctx.send(f"{ctx.author.mention} delivers an almighty backhand to the face of {user.mention}! <:plp:943133077725667388>")
 
     #Errors
     @_order.error
