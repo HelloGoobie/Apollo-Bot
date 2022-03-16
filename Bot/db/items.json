@@ -1,42 +1,97 @@
 {
-    "parts": {
-        "cost": 30000000,
-        "limit": 200
-    },
-    "deluxo": {
-        "cost": 675000000,
-        "limit": 10
-    },
-    "oppressor": {
-        "cost": 2700000000,
-        "limit": 1
-    },
-    "scanner": {
-        "cost": 175000000,
-        "limit": 10
-    },
-    "spyglass": {
-        "cost": 1125000000,
-        "limit": 10
-    },
-    "5%1week": {
-        "cost": 275000000,
-        "limit": 10
-    },
-    "10%90m": {
-        "cost": 75000000,
-        "limit": 50 
-    },
-    "15%1hr": {
-        "cost": 5000000,
-        "limit": 100
-    },
-    "5%1d": {
-        "cost": 150000000,
-        "limit": 10
-    },
-    "5%2hr": {
-        "cost": 100000000,
-        "limit": 25
-    }
+	"parts": {
+		"cost": 30000000,
+		"limit": 200,
+		"type": "Cargo"
+	},
+	"deluxo": {
+		"cost": 675000000,
+		"limit": 10,
+		"type": "Cargo"
+	},
+	"oppressor": {
+		"cost": 2700000000,
+		"limit": 1,
+		"type": "Cargo"
+	},
+	"scanner": {
+		"cost": 175000000,
+		"limit": 10,
+		"type": "Cargo"
+	},
+	"spyglass": {
+		"cost": 1125000000,
+		"limit": 10,
+		"type": "Cargo"
+	},
+	"5%1week": {
+		"cost": 275000000,
+		"limit": 10,
+		"type": "EXP Boost"
+	},
+	"10%90m": {
+		"cost": 75000000,
+		"limit": 50,
+		"type": "EXP Boost"
+	},
+	"15%1hr": {
+		"cost": 5000000,
+		"limit": 100,
+		"type": "EXP Boost"
+	},
+	"5%1d": {
+		"cost": 150000000,
+		"limit": 10,
+		"type": "EXP Boost"
+	},
+	"5%2hr": {
+		"cost": 100000000,
+		"limit": 25,
+		"type": "EXP Boost"
+	},
+	"airline": {
+		"cost": 8000,
+		"limit": 20000,
+		"type": "BXP"
+	},
+	"cargo": {
+		"cost": 28000,
+		"limit": 8000,
+		"type": "BXP"
+	},
+	"heli": {
+		"cost": 5000,
+		"limit": 15000,
+		"type": "BXP"
+	},
+	"garbage": {
+		"cost": 12000,
+		"limit": 5000,
+		"type": "BXP"
+	},
+	"trucking": {
+		"cost": 8500,
+		"limit": 10000,
+		"type": "BXP"
+	},
+	"conductor": {
+		"cost": 6000,
+		"limit": 20000,
+		"type": "BXP"
+	},
+	"ems": {
+		"cost": 11000,
+		"limit": 10000,
+		"type": "BXP"
+	},
+	"bus": {
+		"cost": 100000,
+		"limit": 1000,
+		"type": "BXP"
+	},
+	"fish": {
+		"cost": 850,
+		"limit": 500000,
+		"type": "Cargo"
+	}
 }

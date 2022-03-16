@@ -2,6 +2,9 @@ import discord
 import sqlite3
 import time
 import json
+from PIL import Image, ImageDraw, ImageFilter
+
+img = Image.new('RGBA', (500, 500), (0, 0, 0, 0))
 
 def dict_factory(cursor, row):
     return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
@@ -28,7 +31,7 @@ def discount_active():
         return [False, 0]
 
     if discount["discount_end_date"] < int(time.time()):
-        cur.execute("UPDATE discounts SET active = 0 WHERE active = 1")
+        cur.execute("UPDATE discount SET active = 0 WHERE active = 1")
         con.commit()
         con.close()
         return [False, 0]
@@ -94,3 +97,37 @@ async def blacklist_check(bot, id):
 
 
     return [True, blacklist["blacklist_end_date"]]
+
+def hunter_role():
+    with open("db/config.json") as fp:
+        config = json.load(fp)
+    return config["hunter_role"]
+
+def bxp_role():
+    with open("db/config.json") as fp:
+        config = json.load(fp)
+    return config["bxp_role"]
+
+def pie_chart(data):
+    global img
+    colours = ["#88b5e6", "#ad92df"]
+    img = Image.new("RGBA", (600, 600), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    if sum(data) == 0:
+        for i in range(len(data)):
+            data[i] = 1
+
+    #Draw pie chart
+    total_amount = sum(data)
+    start_angle = -90
+    for i in range(len(data)):
+        angle = (data[i] / total_amount) * 360
+        draw.pieslice((100, 100, 500, 500), start_angle, start_angle + angle, fill=colours[i])
+        start_angle += angle
+
+    #Smooth out the edges
+    img = img.filter(ImageFilter.GaussianBlur(radius=10))
+
+    #Return image
+    return img

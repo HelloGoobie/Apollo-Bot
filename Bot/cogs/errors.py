@@ -11,10 +11,10 @@ class errors(commands.Cog):
         if isinstance(error, commands.BadArgument):
             pass
         elif isinstance(error, (commands.MissingAnyRole, commands.MissingPermissions)):
-            await ctx.reply(embed=functions.embed_generator(self.bot, "You are missing the permissions required to run this command", colour=0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, "You are missing the permissions required to run this command, please check the #information page or contact a member of staff", colour=0xFF0000))
 
         elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.reply(embed=functions.embed_generator(self.bot, "You are missing a required argument", colour=0xFF0000))
+            await ctx.reply(embed=functions.embed_generator(self.bot, "Something doesn't look quite right, if you're not sure how to place an order please check out #how-to-order! ", colour=0xFF0000))
             
         else:
             raise error

@@ -1,5 +1,6 @@
 import re
 import discord
+from discord import Member
 import json
 from discord.ext import commands
 import sqlite3
@@ -214,6 +215,8 @@ class Admin(commands.Cog):
 
         channel = await self.bot.fetch_channel(config["moderation_logs_channel"])
         await channel.send(embed=functions.embed_generator(self.bot, "The user **{}** has been unblacklisted".format(user.name), colour=0xFF0000, author=user.name, avatar_url=user.avatar_url))
+   
+
 
     #Errors
     @_cancel.error
