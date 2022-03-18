@@ -8,7 +8,7 @@ import modules.functions as functions
 import time
 from typing import Union
 
-priorities = ["normal", "high"]   
+priorities = ["normal", "high"]
 maxOrder = 1
 
 def manager_role():
@@ -223,11 +223,11 @@ class Admin(commands.Cog):
 
         channel = await self.bot.fetch_channel(config["moderation_logs_channel"])
         await channel.send(embed=functions.embed_generator(self.bot, "The user **{}** has been unblacklisted".format(user.name), colour=0xFF0000, author=user.name, avatar_url=user.avatar_url))
-   
+
 
     @commands.command(name="custom")
     @commands.has_any_role(manager_role())
-    async def _custom(self, ctx, item, amount: Union[int, str], priority:str, storage = None):
+    async def _custom(self, ctx, user: Union[int, discord.Member], item, amount: Union[int, str], priority:str, storage = None):
         """- Custom Overlimit Order"""
         con = sqlite3.connect('db/orders.db')
         con.row_factory = functions.dict_factory
@@ -236,13 +236,18 @@ class Admin(commands.Cog):
         con = sqlite3.connect("db/orders.db", timeout=10)
         cur = con.cursor()
 
-        cur.execute("SELECT count(*) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress')".format(ctx.author.id))
-        orders = cur.fetchone()   
+        if not user:
+            user = ctx.author
+        elif isinstance(user, int):
+            user = await self.bot.fetch_user(user)
+
+        cur.execute("SELECT count(*) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress')".format(user.id))
+        orders = cur.fetchone()
 
         with open("db/config.json") as fp:
             config = json.load(fp)
 
-        with open("db/custom.json") as fp:
+        with open("db/items.json") as fp:
             custom = json.load(fp)
 
         if not custom.get(item.lower()):
@@ -250,7 +255,7 @@ class Admin(commands.Cog):
             return
 
         if amount == "max":
-            amount = custom[item]["limit"]
+            amount = custom[item]["custom_limit"]
         elif amount < 1 :
             await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
             return
@@ -263,7 +268,7 @@ class Admin(commands.Cog):
         priority = priorities.index(priority.lower())
 
         cost = custom[item]["cost"]
-        limit = custom[item]["limit"]
+        limit = custom[item]["custom_limit"]
 
         if amount > limit:
             await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
@@ -272,7 +277,7 @@ class Admin(commands.Cog):
         cur.execute("SELECT count(*) FROM orders")
         order_id = cur.fetchone()[0] + 1
 
-        cur.execute("SELECT sum(amount) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress') AND product = '{}'".format(ctx.author.id, item))
+        cur.execute("SELECT sum(amount) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress') AND product = '{}'".format(user.id, item))
         current_amount = cur.fetchone()[0]
         if not current_amount:
             current_amount=0
@@ -299,8 +304,7 @@ class Admin(commands.Cog):
         oType = custom[item]["type"]
 
         formatted_cost = "$" + format(final_cost, ",")
-        name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
-        embed = discord.Embed(title="{} Order Placed - #{}".format(oType, order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, discount_text, storage))
+        embed = discord.Embed(title="{} Order Placed - #{}".format(oType, order_id), description="**Customer: **{}\n**Item: **{}\n**Amount: **{}\n**Cost: **{}{}\n**Storage: **{}".format(user.mention,  item, amount, formatted_cost, discount_text, storage))
 
         channel_id = config["orders_channel"]
         channel_log_id = config["orders_log_channel"]
@@ -319,7 +323,7 @@ class Admin(commands.Cog):
 
         cur.execute(f"""INSERT INTO orders
                         (order_id, customer, product, amount, storage, cost, messageid, progress, status, priority, discount_id)
-                    VALUES ({order_id}, {ctx.author.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending', ?, ?)""", (item.lower(), amount, storage, priority, discount_id))
+                    VALUES ({order_id}, {user.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending', ?, ?)""", (item.lower(), amount, storage, priority, discount_id))
 
         con.commit()
         con.close()
@@ -328,7 +332,7 @@ class Admin(commands.Cog):
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing a custom order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
         else:
             await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing a custom order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
-    
+
     #Errors
     @_cancel.error
     async def cancel_error(self, ctx, error):
