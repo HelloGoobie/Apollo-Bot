@@ -53,54 +53,54 @@
 		"cost": 8000,
 		"limit": 20000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"cargo": {
 		"cost": 28000,
 		"limit": 8000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"heli": {
 		"cost": 5000,
 		"limit": 15000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"garbage": {
 		"cost": 12000,
 		"limit": 5000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"trucking": {
 		"cost": 8500,
 		"limit": 10000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"conductor": {
 		"cost": 6000,
 		"limit": 20000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"ems": {
 		"cost": 11000,
 		"limit": 10000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"bus": {
 		"cost": 85000,
 		"limit": 1000,
 		"type": "BXP",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	},
 	"fish": {
 		"cost": 850,
 		"limit": 500000,
 		"type": "Cargo",
-		"custom_limit": 0
+		"custom_limit": 5000000
 	}
 }
