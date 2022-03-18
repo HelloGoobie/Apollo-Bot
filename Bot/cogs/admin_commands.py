@@ -6,6 +6,10 @@ from discord.ext import commands
 import sqlite3
 import modules.functions as functions
 import time
+from typing import Union
+
+priorities = ["normal", "high"]   
+maxOrder = 1
 
 def manager_role():
     with open("db/config.json") as fp:
@@ -16,6 +20,10 @@ class Admin(commands.Cog):
     """Admin Commands"""
     def __init__(self, bot):
         self.bot = bot
+
+
+
+
 
     @commands.command(name="cancel")
     @commands.has_any_role(manager_role())
@@ -217,7 +225,110 @@ class Admin(commands.Cog):
         await channel.send(embed=functions.embed_generator(self.bot, "The user **{}** has been unblacklisted".format(user.name), colour=0xFF0000, author=user.name, avatar_url=user.avatar_url))
    
 
+    @commands.command(name="custom")
+    @commands.has_any_role(manager_role())
+    async def _custom(self, ctx, item, amount: Union[int, str], priority:str, storage = None):
+        """- Custom Overlimit Order"""
+        con = sqlite3.connect('db/orders.db')
+        con.row_factory = functions.dict_factory
+        cur = con.cursor()
 
+        con = sqlite3.connect("db/orders.db", timeout=10)
+        cur = con.cursor()
+
+        cur.execute("SELECT count(*) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress')".format(ctx.author.id))
+        orders = cur.fetchone()   
+
+        with open("db/config.json") as fp:
+            config = json.load(fp)
+
+        with open("db/custom.json") as fp:
+            custom = json.load(fp)
+
+        if not custom.get(item.lower()):
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"**{item}** is not a valid item.", 0xFF0000))
+            return
+
+        if amount == "max":
+            amount = custom[item]["limit"]
+        elif amount < 1 :
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
+            return
+
+        if priority.lower() not in priorities:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "The priority must be either High or Normal", 0xFF0000))
+            return
+
+        item = item.lower()
+        priority = priorities.index(priority.lower())
+
+        cost = custom[item]["cost"]
+        limit = custom[item]["limit"]
+
+        if amount > limit:
+            await ctx.reply(embed=functions.embed_generator(self.bot, f"The amount must be less or equal to **{limit}**", 0xFF0000))
+            return
+
+        cur.execute("SELECT count(*) FROM orders")
+        order_id = cur.fetchone()[0] + 1
+
+        cur.execute("SELECT sum(amount) FROM orders WHERE customer LIKE {} AND status IN ('pending', 'in progress') AND product = '{}'".format(ctx.author.id, item))
+        current_amount = cur.fetchone()[0]
+        if not current_amount:
+            current_amount=0
+
+        if (current_amount + amount) > limit:
+            await ctx.reply(embed=functions.embed_generator(self.bot, "This order, in addition to your previous orders, would exceed the limit of {} for {} orders".format(limit, item), 0xFF0000))
+            con.close()
+            return
+
+        final_cost = cost * amount
+
+        if priority:
+            final_cost = round(final_cost * 1.1)
+
+        [discount_id, discount_amount] = functions.discount_active()
+
+        discount_text = ""
+        if discount_id:
+            final_cost = functions.discount_price(final_cost)
+            discount_text = "\n**Discount**: {}%".format(discount_amount)
+
+        final_cost = int(round(final_cost))
+
+        oType = custom[item]["type"]
+
+        formatted_cost = "$" + format(final_cost, ",")
+        name = (ctx.author.nick or ctx.author.name) + "#" + ctx.author.discriminator
+        embed = discord.Embed(title="{} Order Placed - #{}".format(oType, order_id), description="**Customer: **{} ({})\n**Item: **{}\n**Amount: **{}\n**Cost: **{}{}\n**Storage: **{}".format(ctx.author.mention, name, item, amount, formatted_cost, discount_text, storage))
+
+        channel_id = config["orders_channel"]
+        channel_log_id = config["orders_log_channel"]
+        channel = await self.bot.fetch_channel(channel_id)
+        channel_log = await self.bot.fetch_channel(channel_log_id)
+
+        if priority:
+            embed.color = 0x8240AF
+            message = await channel.send("A custom priority order has been placed", embed=embed)
+            await channel_log.send(embed=embed)
+        else:
+            embed.color = 0xFF0000
+            message = await channel.send("A custom new order has been placed", embed=embed)
+            await channel_log.send(embed=embed)
+
+
+        cur.execute(f"""INSERT INTO orders
+                        (order_id, customer, product, amount, storage, cost, messageid, progress, status, priority, discount_id)
+                    VALUES ({order_id}, {ctx.author.id}, ?, ?, ?, {final_cost}, {message.id}, 0,'pending', ?, ?)""", (item.lower(), amount, storage, priority, discount_id))
+
+        con.commit()
+        con.close()
+
+        if discount_id:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing a custom order with Space Hunters, your order number is **#{}**\nThe cost is {} - A discount of {}% is applied".format(order_id, formatted_cost, discount_amount)))
+        else:
+            await ctx.send(embed=functions.embed_generator(self.bot, "Thank you for placing a custom order with Space Hunters, your order number is **#{}**\nThe cost is {}".format(order_id, formatted_cost)))
+    
     #Errors
     @_cancel.error
     async def cancel_error(self, ctx, error):
