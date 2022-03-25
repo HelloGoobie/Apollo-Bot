@@ -59,7 +59,7 @@ class Grinder(commands.Cog):
         await self.bot.http.delete_message(config["orders_channel"], order["messageid"])
 
 
-    @commands.command(name="progress")
+    @commands.command(name="progress", aliases=["update"])
     @commands.has_any_role(functions.hunter_role(), functions.bxp_role())
     async def _progress(self, ctx, order_id: int, progress: str):
         """- Update an order"""
